@@ -34,9 +34,9 @@
         // 渲染表格
         table.render({
             elem: '#sysLog-table',
-            url: config.base_server + 'api-log/sysLog?data',
+            url: config.base_server + 'api-log/sysLog',
             method: 'GET',
-            headers:{'Authorization': 'bearer ' + config.getToken().access_token},
+            headers:{'Authorization': 'Bearer ' + config.getToken().access_token},
             page: true,
             cols: [[
                 {type: 'numbers'},

@@ -1,12 +1,12 @@
 package com.central.oauth.config;
 
 import com.central.common.constant.SecurityConstants;
+import com.central.oauth.filter.LoginProcessSetTenantFilter;
+import com.central.oauth.handler.OauthLogoutSuccessHandler;
 import com.central.oauth.mobile.MobileAuthenticationSecurityConfig;
 import com.central.oauth.openid.OpenIdAuthenticationSecurityConfig;
 import com.central.common.config.DefaultPasswordConfig;
-import com.central.oauth2.common.properties.SecurityProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -20,7 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 import javax.annotation.Resource;
@@ -32,7 +32,6 @@ import javax.annotation.Resource;
  * @author zlt
  */
 @Configuration
-@EnableConfigurationProperties(SecurityProperties.class)
 @Import(DefaultPasswordConfig.class)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -52,9 +51,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Resource
 	private LogoutHandler oauthLogoutHandler;
-
-	@Autowired
-	private SecurityProperties securityProperties;
 
 	@Autowired
 	private ValidateCodeSecurityConfig validateCodeSecurityConfig;
@@ -90,8 +86,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .and()
 				.logout()
 					.logoutUrl(SecurityConstants.LOGOUT_URL)
-					.logoutSuccessUrl(SecurityConstants.LOGIN_PAGE)
-					.logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+					.logoutSuccessHandler(new OauthLogoutSuccessHandler())
 					.addLogoutHandler(oauthLogoutHandler)
 					.clearAuthentication(true)
 					.and()
@@ -101,6 +96,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .and()
 				.apply(mobileAuthenticationSecurityConfig)
 					.and()
+				.addFilterBefore(new LoginProcessSetTenantFilter(), UsernamePasswordAuthenticationFilter.class)
                 .csrf().disable()
 				// 解决不允许显示在iframe的问题
 				.headers().frameOptions().disable().cacheControl();
